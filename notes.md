@@ -29,15 +29,16 @@ First, these materials are on GitHub. You are free to download them and use them
 
 Second, we need to install some packages. Here's what you'll need: 
 
-`install.packages("ggplot2")`
+    install.packages("ggplot2")
+    install.packages("maps")
+    install.packages("classInt")
+    library(ggplot2)
+    library(maps)    
+    library(classInt)
 
-`install.packages("maps")`
 
-`install.packages("maptools")`
 
-Third, we need to get some data. Go here: 
-
-url
+Third, we need to get some data. [Go to the GitHub page](https://github.com/mattwaite/MapsAndChartsInR).
 
 ##Simple charts##
 
@@ -61,7 +62,7 @@ Why do this? It's going to help you find out if your data is flawed. Are there n
 
 But does this tell us anything about the history of the university? Sort of. That max figure is interesting. The average number of students is interesting (more so when you see the graph). But, speaking of graphs, lets look at one.
 
-R comes with built-in chart libraries, but a better alternative is the ggplot2 library.
+R comes with built-in chart libraries, but a better alternative is the [ggplot2 library](http://docs.ggplot2.org/current/index.html).
 
 Let's make a basic bar chart. You do that like this:
 
@@ -119,4 +120,37 @@ Are bars the clearest way to do this? How about a line?
 
 ##Using R as a GIS##
 
-Another form of data visualization is a map. 
+Another form of data visualization is a map. And guess what: ggplot can do this.
+
+`all_states <- map_data("state")`
+
+`unemployment <- read.csv("~/Dropbox/Presentations/MapsAndChartsInR/data/unemployment.csv")`
+
+`View(all_states)`
+
+`View(unemployment)`
+
+I cheated and created a common key. Now we merge them.
+
+`mergedata <- merge(all_states, unemployment, by.x = "region", by.y = "StateJoin")`
+
+`mergedata <- mergedata[order(mergedata$order), ]`
+
+`unemp = ggplot(mergedata, aes(long, lat, group = group)) +  geom_polygon(aes(fill = Rate))`
+
+`plot(unemp)`
+
+But, what if we want quartiles?
+
+`RateGroups <- cut_number( mergedata$Rate, n = 4, dig.lab = 4)`
+
+`unemp2 = ggplot(mergedata, aes(long, lat, group = group)) +  geom_polygon(aes(fill = RateGroups))`
+
+`plot(unemp2)`
+
+Want to get freaky? Natural breaks.
+
+    jenks <- classIntervals(mergedata$Rate, n=4, style="fisher")
+    jenksrates <- cut(mergedata$Rate, breaks = c(jenks$brks), dig.lab = 4)
+    unemp3 = ggplot(mergedata, aes(long, lat, group = group)) +  geom_polygon(aes(fill = jenksrates))
+    plot(unemp3)
